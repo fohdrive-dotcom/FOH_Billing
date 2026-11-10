@@ -1,0 +1,141 @@
+{
+  "app": "foh-billing",
+  "version": 1,
+  "exportedAt": "2026-11-10T08:00:00.000Z",
+  "settings": {
+    "business": {
+      "name": "FOH MEDIA & EVENTS - L.L.C",
+      "address": "Shabia, ME9, Musaffah\nAbu Dhabi, UAE",
+      "phone": "+971 56 240 0780 / +971 50 964 1243",
+      "email": "fohmediaproduction@gmail.com",
+      "email2": "info@fohmedia.ae",
+      "website": "",
+      "taxNumber": "105307937000003",
+      "tagline": "Media Production, Event Management, Creative Solutions"
+    },
+    "bank": {
+      "beneficiary": "FOH Media and Events LLC",
+      "bankName": "Abu Dhabi Commercial Bank (ADCB)",
+      "branch": "Abu Dhabi Main Branch",
+      "accountNumber": "14571760920001",
+      "iban": "AE610030014571760920001",
+      "swift": ""
+    },
+    "currency": "AED",
+    "invoiceTaxRate": 5,
+    "quotationTaxRate": 0,
+    "invoicePrefix": "INV-",
+    "quotationPrefix": "QT-",
+    "nextInvoiceNumber": 3,
+    "nextQuotationNumber": 2,
+    "numberPadding": 4,
+    "paymentDays": 0,
+    "validityDays": 30,
+    "invoiceTerms": "Full payment is required upon completion of the work.",
+    "quotationTerms": "Payment: 50% advance upon order confirmation; the remaining 50% is payable immediately after the event.\nAdditional Services: Any additional requirements or services not included in this quotation will be charged separately.\nScope: Services will be provided as specified in the quotation. Any changes to the agreed scope may incur additional charges.\nVAT: All prices quoted are exclusive of VAT. VAT will be charged additionally as applicable.",
+    "invoiceNotes": "",
+    "quotationNotes": "",
+    "signatoryName": "FOH Media & Events LLC",
+    "signatoryTitle": "",
+    "logoDataUrl": "",
+    "sealDataUrl": "",
+    "quotationShowUnitPrice": false
+  },
+  "clients": [
+    {
+      "id": "client-allied",
+      "name": "ALLIED ENERGY - L.L.C",
+      "address": "Abu Dhabi, UAE",
+      "email": "accounts@example.com",
+      "phone": "+971 2 000 0000",
+      "taxNumber": "105187144800003",
+      "createdAt": "2026-11-01T08:00:00.000Z",
+      "updatedAt": "2026-11-01T08:00:00.000Z"
+    },
+    {
+      "id": "client-desert",
+      "name": "Desert Rose Weddings",
+      "address": "Dubai Marina\nDubai, UAE",
+      "email": "hello@example.com",
+      "phone": "+971 50 000 0000",
+      "taxNumber": "",
+      "createdAt": "2026-11-02T08:00:00.000Z",
+      "updatedAt": "2026-11-02T08:00:00.000Z"
+    }
+  ],
+  "documents": [
+    {
+      "id": "doc-qt-1",
+      "type": "quotation",
+      "number": "QT-0001",
+      "status": "accepted",
+      "issueDate": "2026-11-05",
+      "dueDate": "",
+      "validUntil": "2026-12-05",
+      "client": { "name": "ALLIED ENERGY - L.L.C", "address": "", "email": "", "phone": "", "taxNumber": "105187144800003" },
+      "clientId": "client-allied",
+      "items": [
+        { "id": "i1", "title": "Videography", "description": "Videography With Editing - ADIPEC 2026", "quantity": 1, "unit": "Crew", "unitPrice": 700 }
+      ],
+      "discountType": "amount",
+      "discountValue": 0,
+      "taxRate": 0,
+      "currency": "AED",
+      "notes": "",
+      "terms": "Payment: 50% advance upon order confirmation; the remaining 50% is payable immediately after the event.\nVAT: All prices quoted are exclusive of VAT. VAT will be charged additionally as applicable.",
+      "showSeal": true,
+      "convertedToId": "doc-inv-1",
+      "createdAt": "2026-11-05T08:00:00.000Z",
+      "updatedAt": "2026-11-05T08:00:00.000Z"
+    },
+    {
+      "id": "doc-inv-1",
+      "type": "invoice",
+      "number": "INV-0001",
+      "status": "paid",
+      "issueDate": "2026-11-09",
+      "dueDate": "2026-11-09",
+      "validUntil": "",
+      "client": { "name": "ALLIED ENERGY - L.L.C", "address": "", "email": "", "phone": "", "taxNumber": "105187144800003" },
+      "clientId": "client-allied",
+      "items": [
+        { "id": "i2", "title": "", "description": "Videography With Editing - ADIPEC 2026", "quantity": 1, "unit": "Crew", "unitPrice": 700 }
+      ],
+      "discountType": "amount",
+      "discountValue": 0,
+      "taxRate": 5,
+      "currency": "AED",
+      "notes": "",
+      "terms": "Full payment is required upon completion of the work.",
+      "showSeal": true,
+      "convertedFromId": "doc-qt-1",
+      "createdAt": "2026-11-09T08:00:00.000Z",
+      "updatedAt": "2026-11-09T08:00:00.000Z"
+    },
+    {
+      "id": "doc-inv-2",
+      "type": "invoice",
+      "number": "INV-0002",
+      "status": "sent",
+      "issueDate": "2026-10-20",
+      "dueDate": "2026-11-03",
+      "validUntil": "",
+      "client": { "name": "Desert Rose Weddings", "address": "Dubai Marina\nDubai, UAE", "email": "hello@example.com", "phone": "+971 50 000 0000", "taxNumber": "" },
+      "clientId": "client-desert",
+      "items": [
+        { "id": "i3", "title": "Wedding Photography", "description": "Full-day coverage, 2 photographers", "quantity": 1, "unit": "Day", "unitPrice": 4500 },
+        { "id": "i4", "title": "Drone Coverage", "description": "Aerial video, 4K", "quantity": 2, "unit": "Hour", "unitPrice": 600 },
+        { "id": "i5", "title": "Highlight Film", "description": "3-5 minute edited film", "quantity": 1, "unit": "Pcs", "unitPrice": 1800 }
+      ],
+      "discountType": "percent",
+      "discountValue": 10,
+      "taxRate": 5,
+      "currency": "AED",
+      "notes": "Thank you for choosing FOH Media & Events.",
+      "terms": "Full payment is required upon completion of the work.",
+      "showSeal": true,
+      "createdAt": "2026-10-20T08:00:00.000Z",
+      "updatedAt": "2026-10-20T08:00:00.000Z"
+    }
+  ]
+}
