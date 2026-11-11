@@ -95,11 +95,21 @@ export async function POST(request: Request) {
   } catch {
     return fail("Invalid JSON body.", 400);
   }
-  // Only forward the known setting keys, as plain strings.
+  // Forward known setting keys with correct types: the script validates that
+  // number keys are numbers and boolean keys are actual booleans (not strings).
   const input = (body as { settings?: Record<string, unknown> })?.settings ?? {};
-  const updates: Record<string, string> = {};
-  for (const { key } of SHEET_FIELDS) {
-    if (key in input) updates[key] = String(input[key] ?? "");
+  const updates: Record<string, string | number | boolean> = {};
+  for (const { key, kind } of SHEET_FIELDS) {
+    if (!(key in input)) continue;
+    const raw = input[key];
+    if (kind === "boolean") {
+      // Accept true/false, "true"/"false", "TRUE"/"FALSE", 1/0
+      updates[key] = raw === true || String(raw).toLowerCase() === "true";
+    } else if (kind === "number") {
+      updates[key] = Number(raw);
+    } else {
+      updates[key] = String(raw ?? "");
+    }
   }
 
   try {

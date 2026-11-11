@@ -168,8 +168,8 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
     const existing = clients.find((x) => x.id === getValues("clientId"));
     const now = new Date().toISOString();
     const client: Client = { ...c, id: existing?.id ?? uid(), createdAt: existing?.createdAt ?? now, updatedAt: now };
-    await repo.saveClient(client);
-    setValue("clientId", client.id);
+    const saved = await repo.saveClient(client);
+    setValue("clientId", saved.id); // script may assign a different id for new clients
     setClients(await repo.listClients());
     flash("ok", existing ? "Client updated." : "Client saved to your list.");
   }

@@ -110,7 +110,9 @@ export const indexedDbRepository: Repository = {
 
   async saveClient(client) {
     const db = await getDB();
-    await db.put("clients", { ...client, updatedAt: new Date().toISOString() });
+    const saved = { ...client, updatedAt: new Date().toISOString() };
+    await db.put("clients", saved);
+    return saved;
   },
 
   async deleteClient(id) {

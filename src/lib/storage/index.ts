@@ -1,12 +1,16 @@
 /**
  * storage/index.ts — picks which storage the app uses.
  *
- * To switch to Supabase later:
- *   1. create src/lib/storage/supabase.ts that exports `supabaseRepository: Repository`
- *   2. change the line below to:  export const repo = supabaseRepository;
+ * NEXT_PUBLIC_USE_SHEETS=true  →  Google Sheets (via /api/sheets/* routes)
+ * (anything else)             →  IndexedDB (browser-local, default)
+ *
+ * To switch backends, set the env var in .env.local and restart the dev server.
  */
 import { indexedDbRepository } from "./indexeddb";
+import { sheetsRepository } from "./sheets";
 import type { Repository } from "./repository";
 
-export const repo: Repository = indexedDbRepository;
-export { formatNumber, invoiceNumber, invoiceNumberPlaceholder } from "./repository";
+export const repo: Repository =
+  process.env.NEXT_PUBLIC_USE_SHEETS === "true" ? sheetsRepository : indexedDbRepository;
+
+export { formatNumber, invoiceNumber, invoiceNumberPlaceholder, compactDate } from "./repository";

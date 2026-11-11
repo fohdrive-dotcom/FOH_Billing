@@ -23,7 +23,9 @@ export interface Repository {
 
   // Clients
   listClients(): Promise<Client[]>;
-  saveClient(client: Client): Promise<void>;
+  /** Saves (creates or updates) a client. Returns the saved client — the id may differ
+   *  from what was passed in when using the Google Sheets backend (script-assigned ID). */
+  saveClient(client: Client): Promise<Client>;
   deleteClient(id: string): Promise<void>;
 
   // Backup
@@ -40,18 +42,18 @@ export function compactDate(d: Date = new Date()): string {
 }
 
 /**
- * Invoice numbers: "FOH-<DDMMYYYY>-<3 random digits>", e.g. FOH-10112026-482.
- * Pass the numbers already in use so we never hand out a duplicate.
+ * Invoice numbers: "FOH-<DDMMYYYY>-<NNN>", e.g. FOH-10112026-001.
+ * Pass all existing numbers so we always pick the next sequential slot for today.
  */
 export function invoiceNumber(used: Set<string> = new Set(), date: Date = new Date()): string {
   const prefix = `FOH-${compactDate(date)}-`;
-  const free: string[] = [];
-  for (let i = 0; i < 1000; i++) {
-    const candidate = prefix + String(i).padStart(3, "0");
-    if (!used.has(candidate)) free.push(candidate);
-  }
-  if (!free.length) throw new Error("All 1000 invoice numbers for today are used.");
-  return free[Math.floor(Math.random() * free.length)];
+  const existing = [...used]
+    .filter((n) => n.startsWith(prefix))
+    .map((n) => parseInt(n.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n));
+  const next = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+  if (next > 999) throw new Error("All 999 invoice numbers for today are used.");
+  return prefix + String(next).padStart(3, "0");
 }
 
 /** What an unsaved invoice shows until it gets its real number on save. */
