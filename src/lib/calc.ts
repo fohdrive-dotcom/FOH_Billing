@@ -17,12 +17,14 @@ export function num(n: unknown): number {
   return Number.isFinite(v) ? v : 0;
 }
 
-/** VAT is always 5%, added on top of the amount. */
+/** Default VAT rate (5%). */
 export const VAT_RATE = 5;
 
-/** The line amount is the unit price as entered; the crew count is only a label. */
-export function lineAmount(item: Pick<LineItem, "unitPrice">): number {
-  return round2(num(item.unitPrice));
+/** Line amount = No of Crew × Unit Price × No of Days (if provided). */
+export function lineAmount(item: Pick<LineItem, "quantity" | "unitPrice"> & { days?: number }): number {
+  const base = round2(num(item.quantity) * num(item.unitPrice));
+  const d = num(item.days ?? 0);
+  return d > 1 ? round2(base * d) : base;
 }
 
 export interface Totals {
@@ -34,11 +36,11 @@ export interface Totals {
 }
 
 export function calculateTotals(
-  items: Pick<LineItem, "unitPrice">[],
+  items: (Pick<LineItem, "quantity" | "unitPrice"> & { days?: number })[],
   discountType: DiscountType,
   discountValue: number,
+  taxRate = VAT_RATE,
 ): Totals {
-  const taxRate = VAT_RATE;
   const subtotal = round2(items.reduce((sum, it) => sum + lineAmount(it), 0));
   let discount =
     discountType === "percent"

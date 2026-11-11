@@ -20,6 +20,11 @@ export const lineItemSchema = z.object({
     .max(1_000_000, "Number of crew is too large"),
   unit: z.string().max(20, "Unit is too long"),
   unitPrice: money("Unit price"),
+  days: z
+    .number({ error: "Number of days must be a number" })
+    .min(1, "Days must be at least 1")
+    .max(10_000, "Days is too large")
+    .optional(),
 })
   // At least one of title / description must be filled in.
   .refine((it) => it.title.trim() !== "" || it.description.trim() !== "", {
@@ -58,6 +63,7 @@ export const documentFormSchema = z
     notes: z.string().max(2000),
     terms: z.string().max(4000),
     showSeal: z.boolean(),
+    showDays: z.boolean(),
   })
   .refine((d) => !(d.discountType === "percent" && d.discountValue > 100), {
     message: "Discount cannot be more than 100%",

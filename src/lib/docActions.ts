@@ -15,7 +15,7 @@ export function effectiveStatus(doc: AppDocument): DocStatus {
 }
 
 export function docTotal(doc: AppDocument): number {
-  return calculateTotals(doc.items, doc.discountType, doc.discountValue).total;
+  return calculateTotals(doc.items, doc.discountType, doc.discountValue, doc.taxRate).total;
 }
 
 /** A fresh, unsaved copy (new id, no number, today's date, draft). */

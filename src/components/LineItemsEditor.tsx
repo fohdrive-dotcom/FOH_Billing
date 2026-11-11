@@ -14,9 +14,10 @@ interface Props {
   register: UseFormRegister<DocumentFormValues>;
   errors: FieldErrors<DocumentFormValues>;
   currency: string;
+  showDays: boolean;
 }
 
-export function LineItemsEditor({ control, register, errors, currency }: Props) {
+export function LineItemsEditor({ control, register, errors, currency, showDays }: Props) {
   const { fields, append, remove, move } = useFieldArray({ control, name: "items" });
   // Watch the live values so the "Amount" column updates while typing.
   const items = useWatch({ control, name: "items" });
@@ -28,7 +29,8 @@ export function LineItemsEditor({ control, register, errors, currency }: Props) 
       <ol className="space-y-3">
         {fields.map((field, i) => {
           const e = errors.items?.[i];
-          const amount = lineAmount(items?.[i] ?? { quantity: 0, unitPrice: 0 });
+          const item = items?.[i] ?? { quantity: 0, unitPrice: 0, days: undefined };
+          const amount = lineAmount({ ...item, days: showDays ? (item.days ?? 1) : undefined });
           return (
             // Each item is a small card: description on top, numbers underneath.
             // This works in a narrow column (desktop split view) and on phones.
@@ -67,9 +69,9 @@ export function LineItemsEditor({ control, register, errors, currency }: Props) 
                 {e?.title ? <p className="text-xs text-red-600">{e.title.message}</p> : null}
               </div>
 
-              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1.4fr_1.2fr]">
+              <div className={`mt-2 grid grid-cols-2 gap-2 ${showDays ? "sm:grid-cols-[1fr_1fr_1.4fr_1.2fr]" : "sm:grid-cols-[1fr_1.4fr_1.2fr]"}`}>
                 <label>
-                  <span className="text-xs text-slate-500">Number of crew</span>
+                  <span className="text-xs text-slate-500">No of Crew</span>
                   <input
                     {...register(`items.${i}.quantity`, { valueAsNumber: true })}
                     type="number"
@@ -80,6 +82,21 @@ export function LineItemsEditor({ control, register, errors, currency }: Props) 
                   />
                   {e?.quantity ? <span className="mt-1 block text-xs text-red-600">{e.quantity.message}</span> : null}
                 </label>
+                {showDays ? (
+                  <label>
+                    <span className="text-xs text-slate-500">No of Days</span>
+                    <input
+                      {...register(`items.${i}.days`, { valueAsNumber: true })}
+                      type="number"
+                      step="1"
+                      min="1"
+                      inputMode="numeric"
+                      className={inputClass}
+                      aria-invalid={!!e?.days}
+                    />
+                    {e?.days ? <span className="mt-1 block text-xs text-red-600">{e.days.message}</span> : null}
+                  </label>
+                ) : null}
                 <label>
                   <span className="text-xs text-slate-500">Unit price ({currency})</span>
                   <input
@@ -106,7 +123,7 @@ export function LineItemsEditor({ control, register, errors, currency }: Props) 
 
       <Button
         className="mt-3"
-        onClick={() => append({ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0 })}
+        onClick={() => append({ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0, days: 1 })}
       >
         + Add line item
       </Button>

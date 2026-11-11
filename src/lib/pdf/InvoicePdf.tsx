@@ -4,16 +4,17 @@
  *   - logo top-left, "TAX INVOICE / Invoice No. / Date" top-right
  *   - company block with TRN, "Bill To" block
  *   - faint logo watermark behind the table
- *   - 7-column table with black borders and white header
+ *   - dynamic table: No of Crew, optional No of Days, Unit Price,
+ *     optional VAT columns (hidden when taxRate = 0)
  *   - totals on the right, amount in words on the left
  *   - Terms, Bank Details, "Received by" + seal + "FOR <COMPANY>"
  *   - footer: phone / email + tagline bar (repeats on every page)
  */
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import { lineAmount, round2, VAT_RATE } from "../calc";
+import { lineAmount, round2 } from "../calc";
 import { formatDateShort, money } from "../format";
 import { BODY_FONT, ACCENT_FONT } from "./fonts";
-import { COLORS, lines, qtyLabel, type PdfProps } from "./shared";
+import { COLORS, lines, type PdfProps } from "./shared";
 
 const PAGE_X = 20;
 const BORDER = 1.2;
@@ -36,7 +37,6 @@ const s = StyleSheet.create({
   metaLine: { fontSize: 9.5, lineHeight: 1.45 },
 
   company: { marginTop: 22, lineHeight: 1.3, fontSize: 9.5 },
-  // fontSize is needed next to lineHeight (react-pdf quirk, see QuotationPdf.tsx)
   billTo: { marginTop: 38, marginLeft: 5, fontSize: 9.5, lineHeight: 1.35 },
   bold: { fontWeight: 700 },
   billToExtra: { fontSize: 8.5, color: COLORS.muted },
@@ -66,10 +66,11 @@ const s = StyleSheet.create({
   first: { borderLeftWidth: BORDER },
   colNo: { width: 41, textAlign: "center" },
   colDesc: { flex: 1, textAlign: "left" },
-  colQty: { width: 63, textAlign: "center" },
+  colCrew: { width: 55, textAlign: "center" },
+  colDays: { width: 50, textAlign: "center" },
   colPrice: { width: 66, textAlign: "center" },
-  colVat: { width: 52, textAlign: "center" },
-  colVatAmt: { width: 63, textAlign: "center" },
+  colVat: { width: 48, textAlign: "center" },
+  colVatAmt: { width: 60, textAlign: "center" },
   colTotal: { width: 66, textAlign: "center" },
   center: { textAlign: "center" },
   itemTitle: { fontWeight: 700 },
@@ -132,7 +133,10 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
   const b = settings.business;
   const bank = settings.bank;
   const cur = doc.currency;
-  const isTaxInvoice = VAT_RATE > 0;
+  const taxRate = doc.taxRate ?? 0;
+  const hasVat = taxRate > 0;
+  const showDays = doc.showDays ?? false;
+  const isTaxInvoice = hasVat;
   const rowMinHeight = doc.items.length <= 2 ? 38 : 26;
 
   const bankLines = [
@@ -148,7 +152,7 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
   return (
     <Document title={`${doc.number || "Invoice"} - ${doc.client.name}`} author={b.name}>
       <Page size="A4" style={s.page}>
-        {/* Faint logo watermark on every page (your sample has a light "FOH" behind the table) */}
+        {/* Faint logo watermark on every page */}
         <Image fixed src={logoSrc} style={s.watermark} />
 
         {/* Small header on page 2, 3, ... */}
@@ -206,16 +210,17 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
           <View style={s.row} fixed>
             <Text style={[s.th, s.first, s.colNo]}>Sl No.</Text>
             <Text style={[s.th, s.colDesc]}>Description</Text>
-            <Text style={[s.th, s.colQty]}>Quantity</Text>
+            <Text style={[s.th, s.colCrew]}>No of{"\n"}Crew</Text>
+            {showDays ? <Text style={[s.th, s.colDays]}>No of{"\n"}Days</Text> : null}
             <Text style={[s.th, s.colPrice]}>Unit Price</Text>
-            <Text style={[s.th, s.colVat]}>Vat {VAT_RATE}%</Text>
-            <Text style={[s.th, s.colVatAmt]}>Total Vat</Text>
-            <Text style={[s.th, s.colTotal]}>Total</Text>
+            {hasVat ? <Text style={[s.th, s.colVat]}>VAT{"\n"}{taxRate}%</Text> : null}
+            {hasVat ? <Text style={[s.th, s.colVatAmt]}>Total{"\n"}VAT</Text> : null}
+            <Text style={[s.th, s.colTotal]}>{hasVat ? "Total" : "Amount"}</Text>
           </View>
 
           {doc.items.map((item, i) => {
-            const amount = lineAmount(item);
-            const vat = round2((amount * VAT_RATE) / 100);
+            const base = lineAmount({ ...item, days: showDays ? (item.days ?? 1) : undefined });
+            const vat = hasVat ? round2((base * taxRate) / 100) : 0;
             return (
               <View key={item.id} style={[s.row, { minHeight: rowMinHeight }]} wrap={false}>
                 <View style={[s.td, s.first, s.colNo]}>
@@ -225,20 +230,29 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
                   {item.title ? <Text style={s.itemTitle}>{item.title}</Text> : null}
                   {item.description ? <Text>{item.description}</Text> : null}
                 </View>
-                <View style={[s.td, s.colQty]}>
-                  <Text style={s.center}>{qtyLabel(item.quantity, item.unit)}</Text>
+                <View style={[s.td, s.colCrew]}>
+                  <Text style={s.center}>{item.quantity}</Text>
                 </View>
+                {showDays ? (
+                  <View style={[s.td, s.colDays]}>
+                    <Text style={s.center}>{item.days ?? 1}</Text>
+                  </View>
+                ) : null}
                 <View style={[s.td, s.colPrice]}>
                   <Text style={s.center}>{money(item.unitPrice)}</Text>
                 </View>
-                <View style={[s.td, s.colVat]}>
-                  <Text style={s.center}>{VAT_RATE}%</Text>
-                </View>
-                <View style={[s.td, s.colVatAmt]}>
-                  <Text style={s.center}>{money(vat)}</Text>
-                </View>
+                {hasVat ? (
+                  <View style={[s.td, s.colVat]}>
+                    <Text style={s.center}>{taxRate}%</Text>
+                  </View>
+                ) : null}
+                {hasVat ? (
+                  <View style={[s.td, s.colVatAmt]}>
+                    <Text style={s.center}>{money(vat)}</Text>
+                  </View>
+                ) : null}
                 <View style={[s.td, s.colTotal]}>
-                  <Text style={s.center}>{money(amount + vat)}</Text>
+                  <Text style={s.center}>{money(base + vat)}</Text>
                 </View>
               </View>
             );
@@ -253,7 +267,7 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
           </View>
           <View style={s.summary}>
             <Text style={s.summaryLine}>
-              Sub Total Before VAT ({cur}) : {money(totals.subtotal)}
+              Sub Total{hasVat ? " Before VAT" : ""} ({cur}) : {money(totals.subtotal)}
             </Text>
             {totals.discount > 0 ? (
               <>
@@ -261,14 +275,18 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
                   Discount{doc.discountType === "percent" ? ` ${doc.discountValue}%` : ""} ({cur}) : -
                   {money(totals.discount)}
                 </Text>
-                <Text style={s.summaryLine}>
-                  Taxable Amount ({cur}) : {money(totals.taxable)}
-                </Text>
+                {hasVat ? (
+                  <Text style={s.summaryLine}>
+                    Taxable Amount ({cur}) : {money(totals.taxable)}
+                  </Text>
+                ) : null}
               </>
             ) : null}
-            <Text style={s.summaryLine}>
-              VAT ({cur}) : {money(totals.tax)}
-            </Text>
+            {hasVat ? (
+              <Text style={s.summaryLine}>
+                VAT {taxRate}% ({cur}) : {money(totals.tax)}
+              </Text>
+            ) : null}
             <Text style={s.grandTotal}>
               Grand Total ({cur}) : {money(totals.total)}
             </Text>

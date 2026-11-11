@@ -28,6 +28,8 @@ export interface LineItem {
   /** Unit label shown after the quantity, e.g. "Crew", "Day", "Pcs". */
   unit: string;
   unitPrice: number;
+  /** Optional number of days — used when the document has showDays = true. */
+  days?: number;
 }
 
 /** Client details as printed on a document. */
@@ -73,6 +75,8 @@ export interface AppDocument {
   /** One term per line. */
   terms: string;
   showSeal: boolean;
+  /** Whether the "No of Days" column is active for this document. */
+  showDays: boolean;
   /** Set when an invoice was created from a quotation. */
   convertedFromId?: string;
   /** Set on a quotation after it was converted. */

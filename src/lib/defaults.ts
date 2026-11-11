@@ -67,7 +67,7 @@ export function newDocument(type: DocType, settings: Settings): AppDocument {
     dueDate: type === "invoice" ? addDays(today, settings.paymentDays) : "",
     validUntil: type === "quotation" ? addDays(today, settings.validityDays) : "",
     client: { name: "", address: "", email: "", phone: "", taxNumber: "" },
-    items: [{ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0 }],
+    items: [{ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0, days: 1 }],
     discountType: "amount",
     discountValue: 0,
     taxRate: type === "invoice" ? settings.invoiceTaxRate : settings.quotationTaxRate,
@@ -75,6 +75,7 @@ export function newDocument(type: DocType, settings: Settings): AppDocument {
     notes: type === "invoice" ? settings.invoiceNotes : settings.quotationNotes,
     terms: type === "invoice" ? settings.invoiceTerms : settings.quotationTerms,
     showSeal: true,
+    showDays: false,
     createdAt: now,
     updatedAt: now,
   };

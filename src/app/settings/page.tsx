@@ -11,6 +11,7 @@ import type { Settings } from "@/lib/types";
 import { repo, formatNumber, invoiceNumberPlaceholder } from "@/lib/storage";
 import { DEFAULT_SETTINGS } from "@/lib/defaults";
 import { downloadBackup, readBackupFile } from "@/lib/backup";
+import { applySheetToSettings, fetchSheetSettings, pushSheetSettings, sheetDiffers } from "@/lib/sheetSettings";
 import { Button, Card, Field, Loading, PageHeader, cx, inputClass } from "@/components/ui";
 
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024; // 1.5 MB
@@ -25,6 +26,7 @@ export default function SettingsPage() {
     register,
     handleSubmit,
     reset,
+    getValues,
     setValue,
     setError,
     control,
@@ -32,10 +34,27 @@ export default function SettingsPage() {
   } = useForm<SettingsFormValues>({ resolver: zodResolver(settingsSchema), defaultValues: DEFAULT_SETTINGS });
 
   useEffect(() => {
-    repo.getSettings().then((s) => {
-      reset(s);
+    let cancelled = false;
+    (async () => {
+      const local = await repo.getSettings();
+      if (cancelled) return;
+      reset(local);
       setLoaded(true);
-    });
+      // The Google Sheet is the master copy: pull it in and keep it on this device too.
+      try {
+        const row = await fetchSheetSettings();
+        if (cancelled || !sheetDiffers(local, row)) return;
+        const merged = applySheetToSettings(local, row);
+        await repo.saveSettings(merged);
+        reset(merged);
+        setMessage({ kind: "ok", text: "Settings updated from Google Sheet." });
+      } catch (e) {
+        if (!cancelled) setMessage({ kind: "error", text: `Could not read Google Sheet: ${e instanceof Error ? e.message : e}` });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [reset]);
 
   const logo = useWatch({ control, name: "logoDataUrl" });
@@ -63,10 +82,33 @@ export default function SettingsPage() {
       const settings: Settings = { ...v, currency: v.currency.toUpperCase(), bank: { ...v.bank } };
       await repo.saveSettings(settings);
       reset(settings);
-      flash("ok", "Settings saved.");
+      // Also update the Google Sheet. The local save already worked, so a sheet error is only a warning.
+      try {
+        await pushSheetSettings(settings);
+        flash("ok", "Settings saved (and updated in Google Sheet).");
+      } catch (e) {
+        flash("error", `Saved on this device, but Google Sheet update failed: ${e instanceof Error ? e.message : e}`);
+      }
     },
     () => flash("error", "Please fix the highlighted fields."),
   );
+
+  const [sheetLoading, setSheetLoading] = useState(false);
+
+  /** Fills the form from the Google Sheet. Blank cells are ignored. Click "Save settings" to keep it. */
+  async function loadFromSheet() {
+    setSheetLoading(true);
+    try {
+      const row = await fetchSheetSettings();
+      // keepDefaultValues -> the form shows "Unsaved changes" until you save.
+      reset(applySheetToSettings(getValues(), row), { keepDefaultValues: true });
+      flash("ok", "Loaded from Google Sheet. Click “Save settings” to keep these values.");
+    } catch (e) {
+      flash("error", e instanceof Error ? e.message : String(e));
+    } finally {
+      setSheetLoading(false);
+    }
+  }
 
   /** Reads an uploaded image into a data: URL so it can be stored in the browser. */
   function onImage(field: "logoDataUrl" | "sealDataUrl", file: File | undefined) {
@@ -104,6 +146,16 @@ export default function SettingsPage() {
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6 pb-24">
       <PageHeader title="Settings" />
+
+      <Card title="Google Sheet">
+        <p className="mb-3 text-sm text-slate-600">
+          Settings are loaded from the Google Sheet when this page opens, and “Save settings” writes your changes back
+          to the sheet. Logo and seal images stay on this device only.
+        </p>
+        <Button onClick={loadFromSheet} disabled={sheetLoading}>
+          {sheetLoading ? "Loading…" : "⟳ Load from Google Sheet"}
+        </Button>
+      </Card>
 
       {message ? (
         <div

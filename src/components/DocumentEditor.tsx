@@ -43,14 +43,15 @@ function toFormValues(d: AppDocument): DocumentFormValues {
       phone: d.client.phone ?? "",
       taxNumber: d.client.taxNumber ?? "",
     },
-    items: d.items.map((it) => ({ ...it })),
+    items: d.items.map((it) => ({ ...it, days: it.days ?? 1 })),
     discountType: d.discountType,
     discountValue: d.discountValue,
-    taxRate: VAT_RATE,
+    taxRate: d.taxRate ?? VAT_RATE,
     currency: d.currency,
     notes: d.notes,
     terms: d.terms,
     showSeal: d.showSeal,
+    showDays: d.showDays ?? false,
   };
 }
 
@@ -68,9 +69,11 @@ function toDocument(base: AppDocument, v: Partial<DocumentFormValues>): AppDocum
       unit: it?.unit ?? "",
       quantity: num(it?.quantity),
       unitPrice: num(it?.unitPrice),
+      days: it?.days != null ? num(it.days) : undefined,
     })),
     discountValue: num(v.discountValue),
-    taxRate: VAT_RATE,
+    taxRate: num(v.taxRate ?? base.taxRate),
+    showDays: v.showDays ?? base.showDays ?? false,
   };
 }
 
@@ -103,7 +106,7 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
   const values = useWatch({ control }) as Partial<DocumentFormValues>;
   const type = (values.type ?? initial.type) as DocType;
   const liveDoc = useMemo(() => toDocument(base, values), [base, values]);
-  const totals = calculateTotals(liveDoc.items, liveDoc.discountType, liveDoc.discountValue);
+  const totals = calculateTotals(liveDoc.items, liveDoc.discountType, liveDoc.discountValue, liveDoc.taxRate);
 
   // Number shown before saving = the one that WILL be used.
   const previewNumber =
@@ -409,8 +412,25 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
             </div>
           </Card>
 
-          <Card title="Line items">
-            <LineItemsEditor control={control} register={register} errors={errors} currency={liveDoc.currency} />
+          <Card
+            title="Line items"
+            actions={
+              <Button
+                variant="ghost"
+                className="text-xs"
+                onClick={() => setValue("showDays", !(values.showDays ?? false), { shouldDirty: true })}
+              >
+                {values.showDays ? "− Remove Days" : "+ Add No of Days"}
+              </Button>
+            }
+          >
+            <LineItemsEditor
+              control={control}
+              register={register}
+              errors={errors}
+              currency={liveDoc.currency}
+              showDays={!!(values.showDays)}
+            />
           </Card>
 
           <Card title="Totals">
@@ -436,10 +456,47 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
               </Field>
             </div>
 
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Field label="VAT rate (%)" error={errors.taxRate?.message} className="w-32">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  inputMode="decimal"
+                  {...register("taxRate", { valueAsNumber: true })}
+                  className={inputClass}
+                  aria-invalid={!!errors.taxRate}
+                />
+              </Field>
+              {Number(values.taxRate ?? VAT_RATE) > 0 ? (
+                <Button
+                  variant="ghost"
+                  className="mt-5 text-xs text-red-600 hover:text-red-700"
+                  onClick={() => setValue("taxRate", 0, { shouldDirty: true })}
+                >
+                  Remove VAT
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  className="mt-5 text-xs text-green-700 hover:text-green-800"
+                  onClick={() => setValue("taxRate", VAT_RATE, { shouldDirty: true })}
+                >
+                  Add VAT ({VAT_RATE}%)
+                </Button>
+              )}
+            </div>
+
             <dl className="mt-5 space-y-1 rounded-md bg-slate-50 p-4 text-sm tabular-nums">
               <Row label="Subtotal" value={money(totals.subtotal)} />
               {totals.discount > 0 ? <Row label="Discount" value={`− ${money(totals.discount)}`} /> : null}
-              <Row label={`VAT (${VAT_RATE}%)`} value={`+ ${money(totals.tax)}`} />
+              {totals.discount > 0 && liveDoc.taxRate > 0 ? (
+                <Row label={`Taxable amount`} value={money(totals.taxable)} />
+              ) : null}
+              {liveDoc.taxRate > 0 ? (
+                <Row label={`VAT (${liveDoc.taxRate}%)`} value={`+ ${money(totals.tax)}`} />
+              ) : null}
               <div className="flex justify-between border-t border-slate-300 pt-2 text-base font-bold">
                 <dt>Grand total</dt>
                 <dd>
