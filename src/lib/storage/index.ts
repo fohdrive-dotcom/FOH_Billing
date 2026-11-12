@@ -13,4 +13,4 @@ import type { Repository } from "./repository";
 export const repo: Repository =
   process.env.NEXT_PUBLIC_USE_SHEETS === "true" ? sheetsRepository : indexedDbRepository;
 
-export { formatNumber, invoiceNumber, invoiceNumberPlaceholder, compactDate } from "./repository";
+export { formatNumber, invoiceNumber, invoiceNumberPlaceholder, quotationNumber, quotationNumberPlaceholder, compactDate } from "./repository";

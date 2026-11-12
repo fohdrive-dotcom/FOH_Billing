@@ -10,7 +10,7 @@
 import type { AppDocument, BackupData, Client, DocType, Settings } from "../types";
 import { DEFAULT_SETTINGS } from "../defaults";
 import { applySheetToSettings, settingsToSheet } from "../sheetSettings";
-import { invoiceNumber, compactDate } from "./repository";
+import { invoiceNumber, quotationNumber } from "./repository";
 import type { Repository } from "./repository";
 
 async function api<T = unknown>(path: string, init?: RequestInit): Promise<T> {
@@ -70,19 +70,12 @@ export const sheetsRepository: Repository = {
   },
 
   async allocateNumber(type: DocType): Promise<string> {
-    if (type === "invoice") {
-      // Build the number locally: FOH-DDMMYYYY-NNN, sequential within today.
-      const data = await api<{ documents: AppDocument[] }>("/api/sheets/documents?type=invoice");
-      const used = new Set((data.documents ?? []).map((d) => d.number));
-      return invoiceNumber(used);
-    }
-    // Quotations: use the Apps Script's persistent sequential counter.
-    const data = await api<{ number: string }>("/api/sheets/allocate-number", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type }),
-    });
-    return data.number;
+    const data = await api<{ documents: AppDocument[] }>(
+      `/api/sheets/documents?type=${type}`,
+    );
+    const used = new Set((data.documents ?? []).map((d) => d.number));
+    if (type === "invoice") return invoiceNumber(used);
+    return quotationNumber(used);
   },
 
   // ─── Clients ─────────────────────────────────────────────────────────────

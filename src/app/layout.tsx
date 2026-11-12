@@ -15,7 +15,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased">
+    <html lang="en-GB" className="h-full antialiased">
       <body className="min-h-full bg-slate-100 text-slate-900">
         {/* Next.js requires URL-reading client components to be inside <Suspense> */}
         <Suspense fallback={<NavView pathname="" />}>

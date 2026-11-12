@@ -10,7 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { documentFormSchema, type DocumentFormValues } from "@/lib/schema";
 import type { AppDocument, Client, DocStatus, DocType, Settings } from "@/lib/types";
 import { statusesFor } from "@/lib/types";
-import { repo, formatNumber, invoiceNumberPlaceholder } from "@/lib/storage";
+import { repo, invoiceNumberPlaceholder, quotationNumberPlaceholder } from "@/lib/storage";
 import { calculateTotals, num, VAT_RATE } from "@/lib/calc";
 import { amountToWords } from "@/lib/numberToWords";
 import { addDays, money, uid } from "@/lib/format";
@@ -111,9 +111,7 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
   // Number shown before saving = the one that WILL be used.
   const previewNumber =
     base.number ||
-    (type === "invoice"
-      ? invoiceNumberPlaceholder()
-      : formatNumber(settings.quotationPrefix, settings.nextQuotationNumber, settings.numberPadding));
+    (type === "invoice" ? invoiceNumberPlaceholder() : quotationNumberPlaceholder());
   const previewDoc = useMemo(() => ({ ...liveDoc, number: previewNumber }), [liveDoc, previewNumber]);
 
   useEffect(() => {

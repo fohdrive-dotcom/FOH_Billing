@@ -37,7 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   nextQuotationNumber: 1,
   numberPadding: 4,
   paymentDays: 0,
-  validityDays: 30,
+  validityDays: 5,
   invoiceTerms: "Full payment is required upon completion of the work.",
   quotationTerms: [
     "Payment: 50% advance upon order confirmation; the remaining 50% is payable immediately after the event.",

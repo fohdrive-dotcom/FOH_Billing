@@ -56,9 +56,29 @@ export function invoiceNumber(used: Set<string> = new Set(), date: Date = new Da
   return prefix + String(next).padStart(3, "0");
 }
 
+/**
+ * Quotation numbers: "FOH-QT-<DDMMYYYY>-<NNN>", e.g. FOH-QT-10112026-001.
+ * Pass all existing numbers so we always pick the next sequential slot for today.
+ */
+export function quotationNumber(used: Set<string> = new Set(), date: Date = new Date()): string {
+  const prefix = `FOH-QT-${compactDate(date)}-`;
+  const existing = [...used]
+    .filter((n) => n.startsWith(prefix))
+    .map((n) => parseInt(n.slice(prefix.length), 10))
+    .filter((n) => Number.isFinite(n));
+  const next = existing.length > 0 ? Math.max(...existing) + 1 : 1;
+  if (next > 999) throw new Error("All 999 quotation numbers for today are used.");
+  return prefix + String(next).padStart(3, "0");
+}
+
 /** What an unsaved invoice shows until it gets its real number on save. */
 export function invoiceNumberPlaceholder(date: Date = new Date()): string {
   return `FOH-${compactDate(date)}-XXX`;
+}
+
+/** What an unsaved quotation shows until it gets its real number on save. */
+export function quotationNumberPlaceholder(date: Date = new Date()): string {
+  return `FOH-QT-${compactDate(date)}-XXX`;
 }
 
 /** Formats 7 -> "QT-0007". */

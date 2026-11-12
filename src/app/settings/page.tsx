@@ -8,7 +8,7 @@ import { useForm, useWatch, type UseFormRegister, type Path } from "react-hook-f
 import { zodResolver } from "@hookform/resolvers/zod";
 import { settingsSchema, type SettingsFormValues } from "@/lib/schema";
 import type { Settings } from "@/lib/types";
-import { repo, formatNumber, invoiceNumberPlaceholder } from "@/lib/storage";
+import { repo, invoiceNumberPlaceholder, quotationNumberPlaceholder } from "@/lib/storage";
 import { DEFAULT_SETTINGS } from "@/lib/defaults";
 import { downloadBackup, readBackupFile } from "@/lib/backup";
 import { applySheetToSettings, fetchSheetSettings, pushSheetSettings, sheetDiffers } from "@/lib/sheetSettings";
@@ -68,17 +68,6 @@ export default function SettingsPage() {
 
   const onSubmit = handleSubmit(
     async (v) => {
-      // Stop the user from setting a "next number" that is already used.
-      const docs = await repo.listDocuments();
-      const used = new Set(docs.map((d) => d.number));
-      const nextQt = formatNumber(v.quotationPrefix, v.nextQuotationNumber, v.numberPadding);
-      let bad = false;
-      if (used.has(nextQt)) {
-        setError("nextQuotationNumber", { message: `${nextQt} is already used — pick a higher number` });
-        bad = true;
-      }
-      if (bad) return flash("error", "Please fix the highlighted fields.");
-
       const settings: Settings = { ...v, currency: v.currency.toUpperCase(), bank: { ...v.bank } };
       await repo.saveSettings(settings);
       reset(settings);
@@ -204,11 +193,9 @@ export default function SettingsPage() {
             Invoice numbers are automatic: <b>FOH-DDMMYYYY-123</b> (save date + 3 random digits), e.g.{" "}
             <b>{invoiceNumberPlaceholder().replace("XXX", "482")}</b>
           </div>
-          <TextField register={register} label="Quotation prefix" name="quotationPrefix" />
-          <NumberField register={register} label="Next quotation number" name="nextQuotationNumber" error={errors.nextQuotationNumber?.message} />
-          <NumberField register={register} label="Number of digits" name="numberPadding" error={errors.numberPadding?.message} />
-          <div className="self-end rounded-md bg-slate-50 p-2 text-xs text-slate-600">
-            Next quotation: <b>{formatNumber(n.quotationPrefix ?? "", Number(n.nextQuotationNumber) || 1, Number(n.numberPadding) || 4)}</b>
+          <div className="self-end rounded-md bg-slate-50 p-2 text-xs text-slate-600 sm:col-span-2">
+            Quotation numbers are automatic: <b>FOH-QT-DDMMYYYY-001</b>, e.g.{" "}
+            <b>{quotationNumberPlaceholder().replace("XXX", "001")}</b>
           </div>
           <NumberField register={register} label="Invoice due in (days)" name="paymentDays" error={errors.paymentDays?.message} />
           <NumberField register={register} label="Quotation valid for (days)" name="validityDays" error={errors.validityDays?.message} />

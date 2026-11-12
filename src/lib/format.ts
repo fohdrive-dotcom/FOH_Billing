@@ -16,9 +16,9 @@ export function todayISO(): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
-/** Adds days to a "YYYY-MM-DD" date. */
+/** Adds days to a "YYYY-MM-DD" (or full ISO) date. */
 export function addDays(iso: string, days: number): string {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
   const date = new Date(y, m - 1, d + (Number.isFinite(days) ? days : 0));
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
@@ -33,14 +33,14 @@ const MONTHS = [
 /** "2026-11-09" -> "November 09, 2026" (quotation style) */
 export function formatDateLong(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  const [y, m, d] = iso.slice(0, 10).split("-");
   return `${MONTHS[Number(m) - 1]} ${d}, ${y}`;
 }
 
 /** "2026-11-09" -> "09/11/2026" (invoice style) */
 export function formatDateShort(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  const [y, m, d] = iso.slice(0, 10).split("-");
   return `${d}/${m}/${y}`;
 }
 

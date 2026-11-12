@@ -9,15 +9,15 @@
  *   - TERMS AND CONDITIONS bullets, seal + "Authorized By"
  */
 import { Document, Page, View, Text, Image, StyleSheet } from "@react-pdf/renderer";
-import { lineAmount, VAT_RATE } from "../calc";
+import { lineAmount } from "../calc";
 import { formatDateLong, money } from "../format";
 import { BODY_FONT, ACCENT_FONT } from "./fonts";
 import { lines, qtyLabel, type PdfProps } from "./shared";
 
 const PAGE_X = 27; // left/right margin
 
-// Black and white only.
-const BLACK = "#000000";
+const BLACK = "#000000";   // borders, text
+const BAR   = "#3D3D3D";   // header bar, table header, total bar
 const WHITE = "#FFFFFF";
 
 const s = StyleSheet.create({
@@ -31,7 +31,7 @@ const s = StyleSheet.create({
     paddingHorizontal: PAGE_X,
   },
   headerRow: { flexDirection: "row", justifyContent: "space-between" },
-  bar: { marginLeft: -PAGE_X, marginTop: 8, width: 227, height: 28, backgroundColor: BLACK, position: "relative" },
+  bar: { marginLeft: -PAGE_X, marginTop: 8, width: 227, height: 28, backgroundColor: BAR, position: "relative" },
   barText: {
     position: "absolute",
     left: 49,
@@ -53,7 +53,7 @@ const s = StyleSheet.create({
   table: { marginTop: 12 },
   row: { flexDirection: "row" },
   th: {
-    backgroundColor: BLACK,
+    backgroundColor: BAR,
     color: WHITE,
     fontWeight: 700,
     fontSize: 11,
@@ -84,7 +84,7 @@ const s = StyleSheet.create({
   cellMoney: { textAlign: "center", fontFamily: ACCENT_FONT, fontSize: 12 },
 
   summaryLabel: { flex: 1, textAlign: "right", fontWeight: 600, fontSize: 9.5 },
-  totalBar: { backgroundColor: BLACK, color: WHITE },
+  totalBar: { backgroundColor: BAR, color: WHITE },
   totalLabel: { flex: 1, textAlign: "right", fontWeight: 700, fontSize: 11.5 },
   totalValue: { textAlign: "center", fontWeight: 700, fontSize: 12 },
 
@@ -117,9 +117,11 @@ export function QuotationPdf({ doc, settings, totals, amountInWords, logoSrc, se
   const b = settings.business;
   const showPrice = settings.quotationShowUnitPrice;
   const cur = doc.currency;
+  const taxRate = doc.taxRate ?? 0;
+  const hasVat = taxRate > 0;
   // One item in your sample = a tall row. Many items = compact rows.
   const rowMinHeight = doc.items.length <= 2 ? 85 : 40;
-  const hasSummary = totals.discount > 0 || totals.tax > 0;
+  const hasSummary = totals.discount > 0 || (hasVat && totals.tax > 0);
 
   return (
     <Document title={`${doc.number || "Quotation"} - ${doc.client.name}`} author={b.name}>
@@ -220,7 +222,7 @@ export function QuotationPdf({ doc, settings, totals, amountInWords, logoSrc, se
                   value={`- ${money(totals.discount)}`}
                 />
               ) : null}
-              {totals.tax > 0 ? <SummaryRow label={`VAT (${VAT_RATE}%)`} value={money(totals.tax)} /> : null}
+              {hasVat && totals.tax > 0 ? <SummaryRow label={`VAT (${taxRate}%)`} value={money(totals.tax)} /> : null}
             </View>
           ) : null}
 

@@ -29,7 +29,7 @@ export async function renderPdfBlob(doc: AppDocument, settings: Settings): Promi
   ]);
   registerFonts();
 
-  const totals = calculateTotals(doc.items, doc.discountType, doc.discountValue);
+  const totals = calculateTotals(doc.items, doc.discountType, doc.discountValue, doc.taxRate);
   const props: PdfProps = {
     doc,
     settings,

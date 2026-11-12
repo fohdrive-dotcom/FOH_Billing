@@ -8,7 +8,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
 import type { AppDocument, BackupData, Client, DocType, Settings } from "../types";
 import { DEFAULT_SETTINGS } from "../defaults";
-import { formatNumber, invoiceNumber, type Repository } from "./repository";
+import { invoiceNumber, quotationNumber, type Repository } from "./repository";
 
 interface BillingDB extends DBSchema {
   documents: { key: string; value: AppDocument };
@@ -84,22 +84,10 @@ export const indexedDbRepository: Repository = {
 
   async allocateNumber(type: DocType) {
     const db = await getDB();
-    if (type === "invoice") {
-      // FOH-DDMMYYYY-123 — random, checked against every number already saved.
-      const docs = await db.getAll("documents");
-      return invoiceNumber(new Set(docs.map((d) => d.number)));
-    }
-    // A transaction makes "read counter + increment" safe even with two tabs open.
-    const tx = db.transaction("settings", "readwrite");
-    const settings = withDefaults(await tx.store.get(SETTINGS_KEY));
-    let number: string;
-    {
-      number = formatNumber(settings.quotationPrefix, settings.nextQuotationNumber, settings.numberPadding);
-      settings.nextQuotationNumber += 1;
-    }
-    await tx.store.put(settings, SETTINGS_KEY);
-    await tx.done;
-    return number;
+    const docs = await db.getAll("documents");
+    const used = new Set(docs.map((d) => d.number));
+    if (type === "invoice") return invoiceNumber(used);
+    return quotationNumber(used);
   },
 
   async listClients() {
