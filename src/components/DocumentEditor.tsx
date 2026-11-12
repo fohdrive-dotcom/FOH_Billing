@@ -52,6 +52,9 @@ function toFormValues(d: AppDocument): DocumentFormValues {
     terms: d.terms,
     showSeal: d.showSeal,
     showDays: d.showDays ?? false,
+    isDigitalMarketing: d.isDigitalMarketing ?? false,
+    campaignStartDate: d.campaignStartDate ?? "",
+    campaignEndDate: d.campaignEndDate ?? "",
   };
 }
 
@@ -74,6 +77,9 @@ function toDocument(base: AppDocument, v: Partial<DocumentFormValues>): AppDocum
     discountValue: num(v.discountValue),
     taxRate: num(v.taxRate ?? base.taxRate),
     showDays: v.showDays ?? base.showDays ?? false,
+    isDigitalMarketing: v.isDigitalMarketing ?? base.isDigitalMarketing ?? false,
+    campaignStartDate: v.campaignStartDate ?? base.campaignStartDate ?? "",
+    campaignEndDate: v.campaignEndDate ?? base.campaignEndDate ?? "",
   };
 }
 
@@ -413,21 +419,41 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
           <Card
             title="Line items"
             actions={
-              <Button
-                variant="ghost"
-                className="text-xs"
-                onClick={() => setValue("showDays", !(values.showDays ?? false), { shouldDirty: true })}
-              >
-                {values.showDays ? "− Remove Days" : "+ Add No of Days"}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  className="text-xs"
+                  onClick={() => setValue("showDays", !(values.showDays ?? false), { shouldDirty: true })}
+                >
+                  {values.showDays ? "− Remove Days" : "+ Add No of Days"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  className={`text-xs ${values.isDigitalMarketing ? "text-indigo-700 font-semibold" : ""}`}
+                  onClick={() => setValue("isDigitalMarketing", !(values.isDigitalMarketing ?? false), { shouldDirty: true })}
+                >
+                  {values.isDigitalMarketing ? "✓ Digital Marketing" : "+ Digital Marketing"}
+                </Button>
+              </div>
             }
           >
+            {values.isDigitalMarketing ? (
+              <div className="mb-4 grid gap-4 sm:grid-cols-2">
+                <Field label="Campaign start date">
+                  <input type="date" {...register("campaignStartDate")} className={inputClass} />
+                </Field>
+                <Field label="Campaign end date">
+                  <input type="date" {...register("campaignEndDate")} className={inputClass} />
+                </Field>
+              </div>
+            ) : null}
             <LineItemsEditor
               control={control}
               register={register}
               errors={errors}
               currency={liveDoc.currency}
               showDays={!!(values.showDays)}
+              isDigitalMarketing={!!(values.isDigitalMarketing)}
             />
           </Card>
 

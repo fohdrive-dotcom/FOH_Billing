@@ -136,6 +136,7 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
   const taxRate = doc.taxRate ?? 0;
   const hasVat = taxRate > 0;
   const showDays = doc.showDays ?? false;
+  const isDigitalMarketing = doc.isDigitalMarketing ?? false;
   const isTaxInvoice = hasVat;
   const rowMinHeight = doc.items.length <= 2 ? 38 : 26;
 
@@ -205,12 +206,23 @@ export function InvoicePdf({ doc, settings, totals, amountInWords, logoSrc, seal
           {doc.client.email ? <Text style={s.billToExtra}>Email : {doc.client.email}</Text> : null}
         </View>
 
+        {isDigitalMarketing && (doc.campaignStartDate || doc.campaignEndDate) ? (
+          <View style={{ marginTop: 10, fontSize: 9.5 }}>
+            {doc.campaignStartDate ? (
+              <Text>Campaign Start Date : {formatDateShort(doc.campaignStartDate)}</Text>
+            ) : null}
+            {doc.campaignEndDate ? (
+              <Text>Campaign End Date : {formatDateShort(doc.campaignEndDate)}</Text>
+            ) : null}
+          </View>
+        ) : null}
+
         {/* ===== Items table ===== */}
         <View style={s.table}>
           <View style={s.row} fixed>
             <Text style={[s.th, s.first, s.colNo]}>Sl No.</Text>
             <Text style={[s.th, s.colDesc]}>Description</Text>
-            <Text style={[s.th, s.colCrew]}>No of{"\n"}Crew</Text>
+            <Text style={[s.th, s.colCrew]}>{isDigitalMarketing ? "Quantity" : "No of\nCrew"}</Text>
             {showDays ? <Text style={[s.th, s.colDays]}>No of{"\n"}Days</Text> : null}
             <Text style={[s.th, s.colPrice]}>Unit Price</Text>
             {hasVat ? <Text style={[s.th, s.colVat]}>VAT{"\n"}{taxRate}%</Text> : null}

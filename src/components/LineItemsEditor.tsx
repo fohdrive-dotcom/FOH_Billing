@@ -15,9 +15,10 @@ interface Props {
   errors: FieldErrors<DocumentFormValues>;
   currency: string;
   showDays: boolean;
+  isDigitalMarketing?: boolean;
 }
 
-export function LineItemsEditor({ control, register, errors, currency, showDays }: Props) {
+export function LineItemsEditor({ control, register, errors, currency, showDays, isDigitalMarketing }: Props) {
   const { fields, append, remove, move } = useFieldArray({ control, name: "items" });
   // Watch the live values so the "Amount" column updates while typing.
   const items = useWatch({ control, name: "items" });
@@ -71,7 +72,7 @@ export function LineItemsEditor({ control, register, errors, currency, showDays 
 
               <div className={`mt-2 grid grid-cols-2 gap-2 ${showDays ? "sm:grid-cols-[1fr_1fr_1.4fr_1.2fr]" : "sm:grid-cols-[1fr_1.4fr_1.2fr]"}`}>
                 <label>
-                  <span className="text-xs text-slate-500">No of Crew</span>
+                  <span className="text-xs text-slate-500">{isDigitalMarketing ? "Quantity" : "No of Crew"}</span>
                   <input
                     {...register(`items.${i}.quantity`, { valueAsNumber: true })}
                     type="number"

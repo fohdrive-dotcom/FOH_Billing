@@ -64,6 +64,9 @@ export const documentFormSchema = z
     terms: z.string().max(4000),
     showSeal: z.boolean(),
     showDays: z.boolean(),
+    isDigitalMarketing: z.boolean(),
+    campaignStartDate: z.string().optional(),
+    campaignEndDate: z.string().optional(),
   })
   .refine((d) => !(d.discountType === "percent" && d.discountValue > 100), {
     message: "Discount cannot be more than 100%",

@@ -77,6 +77,12 @@ export interface AppDocument {
   showSeal: boolean;
   /** Whether the "No of Days" column is active for this document. */
   showDays: boolean;
+  /** When true: "No of Crew" becomes "Quantity" and campaign dates are shown. */
+  isDigitalMarketing: boolean;
+  /** Campaign start date (Digital Marketing mode only), "YYYY-MM-DD". */
+  campaignStartDate?: string;
+  /** Campaign end date (Digital Marketing mode only), "YYYY-MM-DD". */
+  campaignEndDate?: string;
   /** Set when an invoice was created from a quotation. */
   convertedFromId?: string;
   /** Set on a quotation after it was converted. */

@@ -76,6 +76,9 @@ export function newDocument(type: DocType, settings: Settings): AppDocument {
     terms: type === "invoice" ? settings.invoiceTerms : settings.quotationTerms,
     showSeal: true,
     showDays: false,
+    isDigitalMarketing: false,
+    campaignStartDate: "",
+    campaignEndDate: "",
     createdAt: now,
     updatedAt: now,
   };

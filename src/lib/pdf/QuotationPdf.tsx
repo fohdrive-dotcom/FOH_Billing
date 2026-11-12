@@ -119,6 +119,7 @@ export function QuotationPdf({ doc, settings, totals, amountInWords, logoSrc, se
   const cur = doc.currency;
   const taxRate = doc.taxRate ?? 0;
   const hasVat = taxRate > 0;
+  const isDigitalMarketing = doc.isDigitalMarketing ?? false;
   // One item in your sample = a tall row. Many items = compact rows.
   const rowMinHeight = doc.items.length <= 2 ? 85 : 40;
   const hasSummary = totals.discount > 0 || (hasVat && totals.tax > 0);
@@ -176,6 +177,17 @@ export function QuotationPdf({ doc, settings, totals, amountInWords, logoSrc, se
           <Text key={i} style={s.clientExtra}>{l}</Text>
         ))}
         {doc.client.taxNumber ? <Text style={s.clientExtra}>TRN: {doc.client.taxNumber}</Text> : null}
+
+        {isDigitalMarketing && (doc.campaignStartDate || doc.campaignEndDate) ? (
+          <View style={{ marginTop: 8, fontSize: 10 }}>
+            {doc.campaignStartDate ? (
+              <Text>Campaign Start Date: {formatDateLong(doc.campaignStartDate)}</Text>
+            ) : null}
+            {doc.campaignEndDate ? (
+              <Text>Campaign End Date: {formatDateLong(doc.campaignEndDate)}</Text>
+            ) : null}
+          </View>
+        ) : null}
 
         {/* ===== Items table ===== */}
         <View style={s.table}>
