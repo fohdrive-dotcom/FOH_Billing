@@ -5,7 +5,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm, useWatch, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { documentFormSchema, type DocumentFormValues } from "@/lib/schema";
 import type { AppDocument, Client, DocStatus, DocType, Settings } from "@/lib/types";
@@ -93,20 +93,12 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
   const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<"form" | "preview">("form"); // mobile only
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    getValues,
-    trigger,
-    reset,
-    formState: { errors, isDirty },
-  } = useForm<DocumentFormValues>({
+  const formMethods = useForm<DocumentFormValues>({
     resolver: zodResolver(documentFormSchema),
     defaultValues: toFormValues(initial),
     mode: "onTouched", // show errors after leaving a field
   });
+  const { register, control, handleSubmit, setValue, getValues, trigger, reset, formState: { errors, isDirty } } = formMethods;
 
   // Live values for totals + preview.
   const values = useWatch({ control }) as Partial<DocumentFormValues>;
@@ -239,6 +231,7 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
   const words = amountToWords(totals.total, liveDoc.currency);
 
   return (
+    <FormProvider {...formMethods}>
     <div>
       {/* ===== Top bar ===== */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -553,6 +546,7 @@ export function DocumentEditor({ initial, settings, isNew }: Props) {
         </div>
       </div>
     </div>
+    </FormProvider>
   );
 }
 

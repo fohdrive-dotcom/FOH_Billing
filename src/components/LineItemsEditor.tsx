@@ -3,7 +3,8 @@
  * LineItemsEditor.tsx — add / edit / delete / reorder rows.
  * Uses React Hook Form's useFieldArray, which keeps track of a list of inputs.
  */
-import { useFieldArray, useWatch, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
+import { useRef } from "react";
+import { useFieldArray, useWatch, useFormContext, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
 import type { DocumentFormValues } from "@/lib/schema";
 import { lineAmount } from "@/lib/calc";
 import { money, uid } from "@/lib/format";
@@ -20,6 +21,7 @@ interface Props {
 
 export function LineItemsEditor({ control, register, errors, currency, showDays, isDigitalMarketing }: Props) {
   const { fields, append, remove, move } = useFieldArray({ control, name: "items" });
+  const { setValue } = useFormContext<DocumentFormValues>();
   // Watch the live values so the "Amount" column updates while typing.
   const items = useWatch({ control, name: "items" });
 
@@ -30,8 +32,10 @@ export function LineItemsEditor({ control, register, errors, currency, showDays,
       <ol className="space-y-3">
         {fields.map((field, i) => {
           const e = errors.items?.[i];
-          const item = items?.[i] ?? { quantity: 0, unitPrice: 0, days: undefined };
+          const item = items?.[i] ?? { quantity: 0, unitPrice: 0, days: undefined, unit: "" };
           const amount = lineAmount({ ...item, days: showDays ? (item.days ?? 1) : undefined });
+          // Show the unit input whenever unit is non-empty (even a space = user clicked "+ add unit")
+          const hasUnit = item.unit != null && item.unit !== "";
           return (
             // Each item is a small card: description on top, numbers underneath.
             // This works in a narrow column (desktop split view) and on phones.
@@ -71,18 +75,30 @@ export function LineItemsEditor({ control, register, errors, currency, showDays,
               </div>
 
               <div className={`mt-2 grid grid-cols-2 gap-2 ${showDays ? "sm:grid-cols-[1fr_1fr_1.4fr_1.2fr]" : "sm:grid-cols-[1fr_1.4fr_1.2fr]"}`}>
-                <label>
-                  <span className="text-xs text-slate-500">{isDigitalMarketing ? "Quantity" : "No of Crew"}</span>
-                  <input
-                    {...register(`items.${i}.quantity`, { valueAsNumber: true })}
-                    type="number"
-                    step="any"
-                    inputMode="decimal"
-                    className={inputClass}
-                    aria-invalid={!!e?.quantity}
-                  />
+                <div>
+                  <span className="text-xs text-slate-500">Quantity</span>
+                  <div className="flex gap-1">
+                    <input
+                      {...register(`items.${i}.quantity`, { valueAsNumber: true })}
+                      type="number"
+                      step="any"
+                      inputMode="decimal"
+                      className={inputClass}
+                      aria-invalid={!!e?.quantity}
+                    />
+                    {hasUnit ? (
+                      <UnitInput
+                        register={register}
+                        index={i}
+                        onClear={() => setValue(`items.${i}.unit`, "", { shouldDirty: true })}
+                      />
+                    ) : null}
+                  </div>
+                  {!hasUnit ? (
+                    <AddUnitButton onClick={() => setValue(`items.${i}.unit`, " ", { shouldDirty: true })} />
+                  ) : null}
                   {e?.quantity ? <span className="mt-1 block text-xs text-red-600">{e.quantity.message}</span> : null}
-                </label>
+                </div>
                 {showDays ? (
                   <label>
                     <span className="text-xs text-slate-500">No of Days</span>
@@ -124,10 +140,58 @@ export function LineItemsEditor({ control, register, errors, currency, showDays,
 
       <Button
         className="mt-3"
-        onClick={() => append({ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0, days: 1 })}
+        onClick={() => append({ id: uid(), title: "", description: "", quantity: 1, unit: "", unitPrice: 0, days: 1 })}
       >
         + Add line item
       </Button>
+    </div>
+  );
+}
+
+function AddUnitButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="mt-1 text-xs text-indigo-600 hover:text-indigo-800 hover:underline"
+    >
+      + add unit label
+    </button>
+  );
+}
+
+function UnitInput({
+  register,
+  index,
+  onClear,
+}: {
+  register: UseFormRegister<DocumentFormValues>;
+  index: number;
+  onClear: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const { ref, ...rest } = register(`items.${index}.unit`);
+  return (
+    <div className="relative flex-1 min-w-[60px]">
+      <input
+        {...rest}
+        ref={(el) => {
+          ref(el);
+          inputRef.current = el;
+          if (el && el.value.trim() === "") el.focus();
+        }}
+        placeholder="e.g. Crew"
+        className={inputClass + " pr-6 text-xs"}
+        aria-label="Unit label"
+      />
+      <button
+        type="button"
+        onClick={onClear}
+        className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-500 text-xs"
+        title="Remove unit"
+      >
+        ✕
+      </button>
     </div>
   );
 }

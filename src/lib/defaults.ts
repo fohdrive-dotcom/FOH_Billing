@@ -67,7 +67,7 @@ export function newDocument(type: DocType, settings: Settings): AppDocument {
     dueDate: type === "invoice" ? addDays(today, settings.paymentDays) : "",
     validUntil: type === "quotation" ? addDays(today, settings.validityDays) : "",
     client: { name: "", address: "", email: "", phone: "", taxNumber: "" },
-    items: [{ id: uid(), title: "", description: "", quantity: 1, unit: "Crew", unitPrice: 0, days: 1 }],
+    items: [{ id: uid(), title: "", description: "", quantity: 1, unit: "", unitPrice: 0, days: 1 }],
     discountType: "amount",
     discountValue: 0,
     taxRate: type === "invoice" ? settings.invoiceTaxRate : settings.quotationTaxRate,

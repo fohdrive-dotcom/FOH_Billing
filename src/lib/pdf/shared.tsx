@@ -33,8 +33,9 @@ export function lines(text: string): string[] {
     .filter(Boolean);
 }
 
-/** "1" + "Crew" -> "1 Crew" ; 2.5 -> "2.5" */
+/** "1" + "Crew" -> "1 Crew" ; 2.5 -> "2.5" ; empty unit -> just the number */
 export function qtyLabel(qty: number, unit: string): string {
   const q = Number.isInteger(qty) ? String(qty) : String(Math.round(qty * 1000) / 1000);
-  return unit ? `${q} ${unit}` : q;
+  const u = (unit ?? "").trim();
+  return u ? `${q} ${u}` : q;
 }
